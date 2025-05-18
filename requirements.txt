@@ -1,0 +1,4 @@
+streamlit
+cerebras_cloud_sdk
+openai
+python-dotenv
