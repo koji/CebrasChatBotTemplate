@@ -1,0 +1,9 @@
+[server]
+port = 8501
+address = "0.0.0.0"
+
+[browser]
+gatherUsageStats = false
+
+[global]
+developmentMode = false 
