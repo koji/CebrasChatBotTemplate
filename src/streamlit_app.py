@@ -214,3 +214,4 @@ if prompt := st.chat_input("What would you like to ask?"):
 if st.sidebar.button("Clear Chat History"):
     st.session_state.messages = []
     st.rerun()
+
