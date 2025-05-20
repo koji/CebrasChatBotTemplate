@@ -1,14 +1,39 @@
 import streamlit as st
 import time
 import os
+import sys
 
 # Attempt to import Cerebras SDK and specific error classes
+# Set up variables to capture debugging information
+import_error_details = ""
+sdk_import_paths = []
+
 try:
+    # Try to explicitly check if the cerebras module is available
+    import importlib.util
+    spec = importlib.util.find_spec("cerebras")
+    if spec is not None:
+        sdk_import_paths.append(f"cerebras module found at: {spec.origin}")
+    else:
+        sdk_import_paths.append("cerebras module not found in sys.path")
+    
+    # Capture Python's module search paths
+    sdk_import_paths.append("Python sys.path contains:")
+    for path in sys.path:
+        sdk_import_paths.append(f"  - {path}")
+    
+    # Now try the actual import
     from cerebras.cloud.sdk import Cerebras
-    from cerebras.cloud.sdk.errors import APIError, APIConnectionError, AuthenticationError
+    # Try to import error classes directly from the main SDK package
+    # The error classes are likely defined within the main SDK package
+    from cerebras.cloud.sdk import APIError, APIConnectionError, AuthenticationError
     CEREBRAS_SDK_AVAILABLE = True
-except ImportError:
+    sdk_import_paths.append("✅ Cerebras SDK import successful")
+except ImportError as e:
     CEREBRAS_SDK_AVAILABLE = False
+    import_error_details = str(e)
+    sdk_import_paths.append(f"❌ Import Error: {import_error_details}")
+    
     # Define dummy classes if SDK is not available, so the rest of the code doesn't break
     class Cerebras: pass
     class APIError(Exception): pass
@@ -80,13 +105,22 @@ def get_cebras_response(api_key, model_id, current_prompt, chat_history_for_api)
 # --- Streamlit App ---
 st.set_page_config(page_title="Cerebras Chatbot", page_icon="🤖")
 
+st.write("Python Path:", sys.executable)
+st.write("Python Version:", sys.version)
+
+# Display detailed import debugging information
+st.expander("🔍 SDK Import Debug Information").write("\n".join(sdk_import_paths))
+
 st.title("🤖 Cerebras Powered Chatbot")
 
 if not CEREBRAS_SDK_AVAILABLE:
     st.error(
-        "The Cerebras SDK is not installed. Please install it by running `pip install cerebras-cloud-sdk` in your terminal and restart the app.",
+        f"The Cerebras SDK is not installed. Please install it by running `pip install cerebras-cloud-sdk` in your terminal and restart the app.\n\nError details: {import_error_details}",
         icon="🚨"
     )
+    
+    # Add a command to check the pip installation
+    st.code("python -m pip list | grep cerebras", language="bash")
     st.stop()
 
 st.caption("A Streamlit application for interacting with Cerebras models via `cerebras.cloud.sdk`.")
